@@ -4,9 +4,9 @@ A flake8 plugin that checks that Pydantic models have default values which are F
 
 This package adds the following warnings:
 
-- `PYD001`: A Pydantic field which has no default.
-- `PYD002`: A Pydantic field with a default that is not a Field.
-- `PYD002`: A Pydantic field which has a Field default with no description.
+- `PF001`: A Pydantic field which has no default.
+- `PF002`: A Pydantic field with a default that is not a Field.
+- `PF002`: A Pydantic field which has a Field default with no description.
 
 There are no configuration options at this time.
 

@@ -32,7 +32,7 @@ def test_field_with_no_default_errors() -> None:
         (
             2,
             4,
-            "PYD001 Found a Pydantic field which has no default",
+            "PF001 Found a Pydantic field which has no default",
             "",
         ),
     ]
@@ -53,7 +53,7 @@ def test_field_with_non_field_default_errors() -> None:
         (
             3,
             4,
-            "PYD002 Found a Pydantic field which has a default that is not a Field",
+            "PF002 Found a Pydantic field which has a default that is not a Field",
             "",
         ),
     ]
@@ -74,7 +74,7 @@ def test_field_with_missing_description_errors() -> None:
         (
             3,
             4,
-            "PYD003 Found a Pydantic field which has a Field default with no description",
+            "PF003 Found a Pydantic field which has a Field default with no description",
             "",
         ),
     ]
@@ -95,7 +95,7 @@ def test_field_with_empty_description_errors() -> None:
         (
             3,
             4,
-            "PYD004 Found a Pydantic field which has a Field default with an empty description",
+            "PF004 Found a Pydantic field which has a Field default with an empty description",
             "",
         ),
     ]
@@ -116,7 +116,7 @@ def test_generic_model_identified() -> None:
         (
             3,
             4,
-            "PYD001 Found a Pydantic field which has no default",
+            "PF001 Found a Pydantic field which has no default",
             "",
         ),
     ]
@@ -166,7 +166,7 @@ def test_custom_base_class_no_methods_identified() -> None:
         (
             3,
             4,
-            "PYD001 Found a Pydantic field which has no default",
+            "PF001 Found a Pydantic field which has no default",
             "",
         ),
     ]
@@ -191,7 +191,7 @@ def test_custom_base_class_with_validators_identified() -> None:
         (
             3,
             4,
-            "PYD001 Found a Pydantic field which has no default",
+            "PF001 Found a Pydantic field which has no default",
             "",
         ),
     ]
@@ -216,7 +216,7 @@ def test_custom_base_class_with_pydantic_validators_identified() -> None:
         (
             3,
             4,
-            "PYD001 Found a Pydantic field which has no default",
+            "PF001 Found a Pydantic field which has no default",
             "",
         ),
     ]
@@ -240,7 +240,7 @@ def test_custom_base_class_with_config_class_identified() -> None:
         (
             3,
             4,
-            "PYD001 Found a Pydantic field which has no default",
+            "PF001 Found a Pydantic field which has no default",
             "",
         ),
     ]
@@ -264,7 +264,21 @@ def test_custom_base_class_with_config_class_identified() -> None:
         (
             3,
             4,
-            "PYD001 Found a Pydantic field which has no default",
+            "PF001 Found a Pydantic field which has no default",
             "",
         ),
     ]
+
+
+def test_classvar_skipped() -> None:
+    source = inspect.cleandoc(
+        """
+        class MyModel(BaseModel):
+            foo: ClassVar[str]
+            bar: str = Field(..., description="description")
+        """
+    )
+    plugin = Plugin(ast.parse(source))
+    result = list(plugin.run())
+
+    assert result == []
