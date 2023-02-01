@@ -1,4 +1,4 @@
-# flake8-has-docstring
+# flake8-pydantic-fields
 
 A flake8 plugin that checks that Pydantic models have default values which are Fields, and that those fields have descriptions. This encourages data documentation.
 

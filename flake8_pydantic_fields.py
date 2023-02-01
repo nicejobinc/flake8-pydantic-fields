@@ -1,7 +1,7 @@
 import ast
 from typing import Any, Iterable
 
-VERSION = "0.1.0"
+VERSION = "0.1.1"
 PYDANTIC_MODEL_BASES = ["BaseModel", "GenericModel"]
 VALIDATOR_DECORATOR_NAMES = ["validator", "root_validator"]
 ERRORS = {
