@@ -23,3 +23,5 @@ It is a Pydantic model if:
 - The class contains only annotated assignments.
 - The class has at least one method decorated with `@validator` or `@root_validator`.
 - The class contains an inner `Config` class.
+- The class contains only methods with no arguments other than `self`. These are assumed to be transformations on a data model.
+- The class contains an attribute annotated as a `ClassVar`.
