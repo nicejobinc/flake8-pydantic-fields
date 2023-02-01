@@ -1,7 +1,7 @@
 import ast
 from typing import Any, Iterable
 
-VERSION = "0.1.5"
+VERSION = "0.1.6"
 PYDANTIC_MODEL_BASES = ["BaseModel", "GenericModel"]
 VALIDATOR_DECORATOR_NAMES = ["validator", "root_validator"]
 ERRORS = {
@@ -50,6 +50,19 @@ def has_inner_config_class(*, classdef: ast.ClassDef) -> bool:
         isinstance(attribute, ast.ClassDef) and attribute.name == "Config"
         for attribute in classdef.body
     )
+
+
+def no_methods_have_arguments(*, classdef: ast.ClassDef) -> bool:
+    """If a class has no methods with arguments, it must be a data model."""
+    for attribute in classdef.body:
+        if isinstance(attribute, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            non_self_args = [
+                arg for arg in attribute.args.args if arg.arg != "self"
+            ]
+            if len(non_self_args) > 0:
+                return False
+
+    return True
 
 
 def has_classvar_attribute(*, classdef: ast.ClassDef) -> bool:
@@ -127,6 +140,7 @@ class PydanticFieldChecker(ast.NodeVisitor):
                 or has_validator_method(classdef=node)
                 or has_inner_config_class(classdef=node)
                 or has_classvar_attribute(classdef=node)
+                or no_methods_have_arguments(classdef=node)
             )
             and not (has_init(classdef=node) or has_dataclass_decorator(classdef=node))
         )

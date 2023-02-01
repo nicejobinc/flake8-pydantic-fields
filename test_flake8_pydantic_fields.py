@@ -345,3 +345,30 @@ def test_custom_base_class_with_initialized_classvar_identified() -> None:
             "",
         ),
     ]
+
+
+def test_custom_base_class_with_only_bare_methods_identified() -> None:
+    source = inspect.cleandoc(
+        """
+        class MyModel(MyBase):
+            foo: str = Field(..., description="foo")
+            bar: str
+
+            def method(self) -> None:
+                ...
+
+            def method2(self) -> None:
+                ...
+        """
+    )
+    plugin = Plugin(ast.parse(source))
+    result = list(plugin.run())
+
+    assert result == [
+        (
+            3,
+            4,
+            "PF001 Found a Pydantic field which has no default",
+            "",
+        ),
+    ]
