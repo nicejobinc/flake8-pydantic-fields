@@ -1,7 +1,7 @@
 import ast
 from typing import Any, Iterable
 
-VERSION = "0.1.6"
+VERSION = "0.1.7"
 PYDANTIC_MODEL_BASES = ["BaseModel", "GenericModel"]
 VALIDATOR_DECORATOR_NAMES = ["validator", "root_validator"]
 ERRORS = {
@@ -154,7 +154,13 @@ class PydanticFieldChecker(ast.NodeVisitor):
             and node.annotation.value.id.startswith("ClassVar")
         ) or (isinstance(node.annotation, ast.Name) and node.annotation.id == "ClassVar")
 
-        if self.current_class_is_candidate and not is_classvar:
+        is_privateattr = (
+            isinstance(node.value, ast.Call)
+            and isinstance(node.value.func, ast.Name)
+            and node.value.func.id == "PrivateAttr"
+        )
+
+        if self.current_class_is_candidate and not is_classvar and not is_privateattr:
             if node.value is None:
                 self.errors.append(
                     (

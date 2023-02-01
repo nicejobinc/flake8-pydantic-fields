@@ -115,6 +115,20 @@ def test_classvar_skipped() -> None:
     assert result == []
 
 
+def test_privateattr_skipped() -> None:
+    source = inspect.cleandoc(
+        """
+        class MyModel(BaseModel):
+            foo: str = PrivateAttr(default=None)
+            bar: str = Field(..., description="description")
+        """
+    )
+    plugin = Plugin(ast.parse(source))
+    result = list(plugin.run())
+
+    assert result == []
+
+
 def test_generic_model_identified() -> None:
     source = inspect.cleandoc(
         """
