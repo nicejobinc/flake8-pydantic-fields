@@ -22,7 +22,6 @@ def test_field_with_no_default_errors() -> None:
     source = inspect.cleandoc(
         """
         class MyModel(BaseModel):
-            foo: str = Field(..., description="foo")
             bar: str
         """
     )
@@ -31,7 +30,7 @@ def test_field_with_no_default_errors() -> None:
 
     assert result == [
         (
-            3,
+            2,
             4,
             "PYD001 Found a Pydantic field which has no default",
             "",

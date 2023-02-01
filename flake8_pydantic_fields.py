@@ -5,20 +5,23 @@ VERSION = "0.1.1"
 PYDANTIC_MODEL_BASES = ["BaseModel", "GenericModel"]
 VALIDATOR_DECORATOR_NAMES = ["validator", "root_validator"]
 ERRORS = {
-    "PYD001": "PYD001 Found a Pydantic field which has no default",
-    "PYD002": "PYD002 Found a Pydantic field which has a default that is not a Field",
-    "PYD003": "PYD003 Found a Pydantic field which has a Field default with no description",
-    "PYD004": "PYD004 Found a Pydantic field which has a Field default with an empty description",
+    "PF001": "PF001 Found a Pydantic field which has no default",
+    "PF002": "PF002 Found a Pydantic field which has a default that is not a Field",
+    "PF003": "PF003 Found a Pydantic field which has a Field default with no description",
+    "PF004": "PF004 Found a Pydantic field which has a Field default with an empty description",
 }
 
 
 def has_dataclass_decorator(*, classdef: ast.ClassDef) -> bool:
-    return any(
-        decorator.name == "dataclass"
-        if isinstance(decorator, ast.Name)
-        else decorator.attr == "dataclass"
-        for decorator in classdef.decorator_list
-    )
+    for decorator in classdef.decorator_list:
+        if isinstance(decorator, ast.Name):
+            if decorator.id == "dataclass":
+                return True
+        elif isinstance(decorator, ast.Attribute):
+            if decorator.attr == "dataclass":
+                return True
+
+    return False
 
 
 def has_base_class(*, classdef: ast.ClassDef) -> bool:
@@ -32,6 +35,7 @@ def base_class_indicates_pydantic(*, classdef: ast.ClassDef) -> bool:
         pydantic_model_base in base.id
         for pydantic_model_base in PYDANTIC_MODEL_BASES
         for base in classdef.bases
+        if isinstance(base, ast.Name)
     )
 
 
@@ -121,22 +125,24 @@ class PydanticFieldChecker(ast.NodeVisitor):
                     (
                         node.lineno,
                         node.col_offset,
-                        ERRORS["PYD001"],
+                        ERRORS["PF001"],
                     )
                 )
             elif (
                 isinstance(node.value, ast.Call)
+                and isinstance(node.value.func, ast.Name)
                 and node.value.func.id.lower() != "field"
             ) or not isinstance(node.value, ast.Call):
                 self.errors.append(
                     (
                         node.lineno,
                         node.col_offset,
-                        ERRORS["PYD002"],
+                        ERRORS["PF002"],
                     )
                 )
             elif (
                 isinstance(node.value, ast.Call)
+                and isinstance(node.value.func, ast.Name)
                 and node.value.func.id.lower() == "field"
                 and not any(
                     keyword.arg == "description" for keyword in node.value.keywords
@@ -146,14 +152,17 @@ class PydanticFieldChecker(ast.NodeVisitor):
                     (
                         node.lineno,
                         node.col_offset,
-                        ERRORS["PYD003"],
+                        ERRORS["PF003"],
                     )
                 )
             elif (
                 isinstance(node.value, ast.Call)
+                and isinstance(node.value.func, ast.Name)
                 and node.value.func.id.lower() == "field"
                 and any(
-                    keyword.arg == "description" and keyword.value.value == ""
+                    keyword.arg == "description"
+                    and isinstance(keyword.value, ast.Constant)
+                    and keyword.value.value == ""
                     for keyword in node.value.keywords
                 )
             ):
@@ -161,7 +170,7 @@ class PydanticFieldChecker(ast.NodeVisitor):
                     (
                         node.lineno,
                         node.col_offset,
-                        ERRORS["PYD004"],
+                        ERRORS["PF004"],
                     )
                 )
 

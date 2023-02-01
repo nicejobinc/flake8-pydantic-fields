@@ -12,7 +12,7 @@ setup(
     python_requires=">=3.10,<3.11",
     install_requires=install_requires,
     py_modules=["flake8_pydantic_fields"],
-    entry_points={"flake8.extension": "PDF001 = flake8_pydantic_fields:Plugin"},
+    entry_points={"flake8.extension": "PF00 = flake8_pydantic_fields:Plugin"},
     long_description=long_description,
     long_description_content_type="text/markdown",
 )
