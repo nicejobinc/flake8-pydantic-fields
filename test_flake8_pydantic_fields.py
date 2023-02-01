@@ -101,6 +101,20 @@ def test_field_with_empty_description_errors() -> None:
     ]
 
 
+def test_classvar_skipped() -> None:
+    source = inspect.cleandoc(
+        """
+        class MyModel(BaseModel):
+            foo: ClassVar[str]
+            bar: str = Field(..., description="description")
+        """
+    )
+    plugin = Plugin(ast.parse(source))
+    result = list(plugin.run())
+
+    assert result == []
+
+
 def test_generic_model_identified() -> None:
     source = inspect.cleandoc(
         """
@@ -246,7 +260,7 @@ def test_custom_base_class_with_config_class_identified() -> None:
     ]
 
 
-def test_custom_base_class_with_config_class_identified() -> None:
+def test_custom_base_class_with_config_class_with_validators_identified() -> None:
     source = inspect.cleandoc(
         """
         class MyModel(MyBase):
@@ -254,7 +268,9 @@ def test_custom_base_class_with_config_class_identified() -> None:
             bar: str
 
             class Config:
-                pass
+                @validator("foo")
+                def f(cls, v):
+                    return v
         """
     )
     plugin = Plugin(ast.parse(source))
@@ -270,15 +286,62 @@ def test_custom_base_class_with_config_class_identified() -> None:
     ]
 
 
-def test_classvar_skipped() -> None:
+def test_custom_base_class_with_uninitialized_classvar_identified() -> None:
     source = inspect.cleandoc(
         """
-        class MyModel(BaseModel):
-            foo: ClassVar[str]
-            bar: str = Field(..., description="description")
+        class MyModel(MyBase):
+            baz: ClassVar[str]
+            foo: str = Field(..., description="foo")
+            bar: str
+
+            def method(self) -> None:
+                ...
+
+            @property
+            def myprop(self) -> str:
+                return "myprop"
         """
     )
     plugin = Plugin(ast.parse(source))
     result = list(plugin.run())
 
-    assert result == []
+    assert result == [
+        (
+            4,
+            4,
+            "PF001 Found a Pydantic field which has no default",
+            "",
+        ),
+    ]
+
+
+def test_custom_base_class_with_initialized_classvar_identified() -> None:
+    source = inspect.cleandoc(
+        """
+        class MyModel(MyBase):
+            baz: ClassVar[str] = "baz"
+            foo: str = Field(..., description="foo")
+            bar: str
+
+            def method(self) -> None:
+                ...
+
+            @property
+            def myprop(self) -> str:
+                return "myprop"
+
+            class Config:
+                baz = "baz"
+        """
+    )
+    plugin = Plugin(ast.parse(source))
+    result = list(plugin.run())
+
+    assert result == [
+        (
+            4,
+            4,
+            "PF001 Found a Pydantic field which has no default",
+            "",
+        ),
+    ]

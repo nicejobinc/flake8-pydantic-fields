@@ -1,7 +1,7 @@
 import ast
 from typing import Any, Iterable
 
-VERSION = "0.1.4"
+VERSION = "0.1.5"
 PYDANTIC_MODEL_BASES = ["BaseModel", "GenericModel"]
 VALIDATOR_DECORATOR_NAMES = ["validator", "root_validator"]
 ERRORS = {
@@ -48,6 +48,20 @@ def has_inner_config_class(*, classdef: ast.ClassDef) -> bool:
     """If a class has an inner Config class, it must be Pydantic."""
     return any(
         isinstance(attribute, ast.ClassDef) and attribute.name == "Config"
+        for attribute in classdef.body
+    )
+
+
+def has_classvar_attribute(*, classdef: ast.ClassDef) -> bool:
+    """If a class has a ClassVar attribute, it must be Pydantic."""
+    return any(
+        isinstance(attribute, ast.AnnAssign)
+        and isinstance(attribute.annotation, ast.Subscript)
+        and isinstance(attribute.annotation.value, ast.Name)
+        and attribute.annotation.value.id.startswith("ClassVar")
+        or isinstance(attribute, ast.AnnAssign)
+        and isinstance(attribute.annotation, ast.Name)
+        and attribute.annotation.id.startswith("ClassVar")
         for attribute in classdef.body
     )
 
@@ -112,6 +126,7 @@ class PydanticFieldChecker(ast.NodeVisitor):
                 or class_contains_only_annassign(classdef=node)
                 or has_validator_method(classdef=node)
                 or has_inner_config_class(classdef=node)
+                or has_classvar_attribute(classdef=node)
             )
             and not (has_init(classdef=node) or has_dataclass_decorator(classdef=node))
         )
@@ -123,7 +138,8 @@ class PydanticFieldChecker(ast.NodeVisitor):
             isinstance(node.annotation, ast.Subscript)
             and isinstance(node.annotation.value, ast.Name)
             and node.annotation.value.id.startswith("ClassVar")
-        )
+        ) or (isinstance(node.annotation, ast.Name) and node.annotation.id == "ClassVar")
+
         if self.current_class_is_candidate and not is_classvar:
             if node.value is None:
                 self.errors.append(
