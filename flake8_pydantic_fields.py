@@ -1,7 +1,7 @@
 import ast
 from typing import Any, Iterable
 
-VERSION = "0.1.7"
+VERSION = "0.1.8"
 PYDANTIC_MODEL_BASES = ["BaseModel", "GenericModel"]
 VALIDATOR_DECORATOR_NAMES = ["validator", "root_validator"]
 ERRORS = {
@@ -145,6 +145,12 @@ class PydanticFieldChecker(ast.NodeVisitor):
             and not (has_init(classdef=node) or has_dataclass_decorator(classdef=node))
         )
         self.generic_visit(node)
+        self.current_class_is_candidate = False
+
+    def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
+        self.current_class_is_candidate = False
+
+    def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> None:
         self.current_class_is_candidate = False
 
     def visit_AnnAssign(self, node: ast.AnnAssign) -> None:

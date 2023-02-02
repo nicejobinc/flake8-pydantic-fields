@@ -8,7 +8,7 @@ with open("README.md") as f:
 
 setup(
     name="flake8-pydantic-fields",
-    version="0.1.7",
+    version="0.1.8",
     python_requires=">=3.10,<3.11",
     install_requires=install_requires,
     py_modules=["flake8_pydantic_fields"],

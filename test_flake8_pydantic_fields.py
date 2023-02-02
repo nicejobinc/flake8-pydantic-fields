@@ -386,3 +386,20 @@ def test_custom_base_class_with_only_bare_methods_identified() -> None:
             "",
         ),
     ]
+
+
+def test_annassigns_within_method_ignored() -> None:
+    source = inspect.cleandoc(
+        """
+        class MyModel(BaseModel):
+            foo: str = Field(..., description="foo")
+
+            def method(self) -> None:
+                foo: str = "foo"
+                bar: str = "bar"
+        """
+    )
+    plugin = Plugin(ast.parse(source))
+    result = list(plugin.run())
+
+    assert result == []
