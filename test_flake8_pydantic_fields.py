@@ -179,6 +179,20 @@ def test_dataclass_disregarded() -> None:
     assert result == []
 
 
+def test_typeddict_disregarded() -> None:
+    source = inspect.cleandoc(
+        """
+        class MyModel(TypedDict):
+            foo: str
+            bar: str
+        """
+    )
+    plugin = Plugin(ast.parse(source))
+    result = list(plugin.run())
+
+    assert result == []
+
+
 def test_custom_base_class_no_methods_identified() -> None:
     source = inspect.cleandoc(
         """

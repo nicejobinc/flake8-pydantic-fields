@@ -1,7 +1,7 @@
 import ast
 from typing import Any, Iterable
 
-VERSION = "0.1.8"
+VERSION = "0.1.9"
 PYDANTIC_MODEL_BASES = ["BaseModel", "GenericModel"]
 VALIDATOR_DECORATOR_NAMES = ["validator", "root_validator"]
 ERRORS = {
@@ -125,6 +125,14 @@ def has_init(*, classdef: ast.ClassDef) -> bool:
     return False
 
 
+def is_typeddict(*, classdef: ast.ClassDef) -> bool:
+    """If a class has a TypedDict base class, it is not a data model."""
+    return any(
+        isinstance(base, ast.Name) and base.id == "TypedDict"
+        for base in classdef.bases
+    )
+
+
 class PydanticFieldChecker(ast.NodeVisitor):
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
@@ -142,7 +150,11 @@ class PydanticFieldChecker(ast.NodeVisitor):
                 or has_classvar_attribute(classdef=node)
                 or no_methods_have_arguments(classdef=node)
             )
-            and not (has_init(classdef=node) or has_dataclass_decorator(classdef=node))
+            and not (
+                has_init(classdef=node)
+                or has_dataclass_decorator(classdef=node)
+                or is_typeddict(classdef=node)
+            )
         )
         self.generic_visit(node)
         self.current_class_is_candidate = False
