@@ -113,6 +113,20 @@ def has_validator_method(*, classdef: ast.ClassDef) -> bool:
     return False
 
 
+def has_relationship_default(*, classdef: ast.ClassDef) -> bool:
+    """If a class has an attribute whose default is a Relationship, then it is likely SQLAlchemy."""
+    for attribute in classdef.body:
+        if (
+            isinstance(attribute, ast.AnnAssign)
+            and isinstance(attribute.value, ast.Call)
+            and isinstance(attribute.value.func, ast.Name)
+            and attribute.value.func.id == "Relationship"
+        ):
+            return True
+
+    return False
+
+
 def has_init(*, classdef: ast.ClassDef) -> bool:
     """If a class has an __init__ method, it is not a data model."""
     for attribute in classdef.body:
@@ -153,6 +167,7 @@ class PydanticFieldChecker(ast.NodeVisitor):
             and not (
                 has_init(classdef=node)
                 or has_dataclass_decorator(classdef=node)
+                or has_relationship_default(classdef=node)
                 or is_typeddict(classdef=node)
             )
         )

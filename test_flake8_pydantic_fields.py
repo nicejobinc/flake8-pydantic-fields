@@ -417,3 +417,17 @@ def test_annassigns_within_method_ignored() -> None:
     result = list(plugin.run())
 
     assert result == []
+
+
+def test_relationship_default_disqualifies() -> None:
+    source = inspect.cleandoc(
+        """
+        class MyModel(BaseModel):
+            foo: str = Relationship()
+            bar: str
+        """
+    )
+    plugin = Plugin(ast.parse(source))
+    result = list(plugin.run())
+
+    assert result == []
